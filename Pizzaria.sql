@@ -47,7 +47,7 @@ CREATE TABLE tipo_acompanhamentos (
 );
 
 CREATE TABLE cliente (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   cpf INTEGER NOT NULL,
   nome STRING  NOT NULL,
   email STRING  NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE cliente (
 );
 
 CREATE TABLE pedido (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   preco INTEGER NOT NULL,
   data DATETIME NOT NULL
 );
@@ -70,23 +70,23 @@ CREATE TABLE entregador (
 );
 
 CREATE TABLE endereco (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   cep INTEGER NOT NULL,
   nome_rua STRING  NOT NULL,
   numero INTEGER NOT NULL,
-  complemento STRING  NOT NULL,
+  complemento STRING,
   descricao STRING  NOT NULL
 );
 
 CREATE TABLE pedido_pizza (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   id_pizza INTEGER REFERENCES pizza (id),
   id_pedido INTEGER REFERENCES pedido (id),
   valor INTEGER NOT NULL
 );
 
 CREATE TABLE pedido_acompanhamentos (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   id_acompanhamento INTEGER REFERENCES acompanhamentos (id),
   id_pedido INTEGER REFERENCES pedido (id),
   valor INTEGER NOT NULL

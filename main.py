@@ -1,4 +1,9 @@
 import time
+import sqlite3
+import math
+conexao = sqlite3.connect('pizzaria.db')
+
+cursor = conexao.cursor()
 
 class Cliente:
     def __init__(self):
@@ -61,46 +66,95 @@ def tela_login():
     print("\n Login")
     print("\n\t CPF:")
     in_cpf = input()
+    print("\n Login")
+    print("\n\t CPF:")
+    in_cpf = input()
     #checar nome no banco de dados
     in_senha = input()
     #checar senha no banco de dados
     
 def tela_cadastro():
     print("\n Cadastro de Cliente")
-    
-    print("\n\t Nome Completo:")
-    cadastro_nome()
+    cadastro_cliente()
     #checar nome como não null
 
-    print("\n\t CPF:")
-    cadastro_cpf()
-    #checar cpf como não null
-
-    print("\n\t E-mail:")
-    cadastro_email()
-    #checar email como não null
-    
-    print("\n\t Endereco:")
+    print("\n Cadastro de Endereço")
     cadastro_endereco()
     #checar endereco como não null
 
 
-def cadastro_nome():
-    in_nome = input()
+def cadastro_cliente():
+    in_nome = input("   Nome completo: ")
+    in_cpf = input("   CPF: ")
+    in_email = input("   Email: ")
+    in_senha = input("   Senha: ")
+    if len(in_nome)==0 or len(in_cpf)==0 or len(in_email)==0 or len(in_senha)==0:
+        print("Todos os dados devem ser informados!")
+    else:
+        query = """
+        INSERT INTO cliente (nome, cpf, email, senha)
+        VALUES (?, ?, ?, ?);
+        """
+        cursor.execute(query, (in_nome, in_cpf, in_email, in_senha))
+        conexao.commit()
 
-def cadastro_cpf():
-    in_cpf = input()
-
-def cadastro_email():
-    in_email = input()
 
 def cadastro_endereco():
-    receber_cep()
-    receber_nome_rua()
-    receber_numero_local()
-    receber_complemento()
-    receber_descricao()
+    in_cep = input("   CEP: ")
+    in_nome_rua = input("   Nome da rua: ")
+    in_numero = input("   Número: ")
+    in_complemento = input("   Complemento: ")
+    in_descricao = input("   Descrição: ")
+    if len(in_cep)==0 or len(in_nome_rua)==0 or len(in_numero)==0 or \
+        len(in_descricao)==0:
+        print("Todos os dados devem ser informados!")
+    else:
+        query = """
+        INSERT INTO endereco (cep, nome_rua, numero, complemento, descricao)
+        VALUES (?, ?, ?, ?, ?);
+        """
+        cursor.execute(query, (in_cep, in_nome_rua, in_numero, in_complemento, in_descricao))
+        conexao.commit()
+
+        query2 = """
+        SELECT * FROM cliente
+        WHERE ID = (SELECT MAX(id) FROM cliente);
+        """
+        cursor.execute(query2)
+        ultimo_cliente_id = cursor.fetchall()
+        print("Ultimo cliente")
+        print(ultimo_cliente_id[0][0])
+
+        query3 = """
+        SELECT * FROM endereco
+        WHERE ID = (SELECT MAX(id) FROM endereco);
+        """
+        cursor.execute(query3)
+        ultimo_endereco_id = cursor.fetchall()
+        print("Ultimo endereco")
+        print(ultimo_endereco_id[0][0])
+
+        query4 = """
+        UPDATE cliente SET id_endereco = ? WHERE id = ?;
+        """
+        data = (ultimo_endereco_id[0][0], ultimo_cliente_id[0][0])
+        cursor.execute(query4, data)
+        conexao.commit()
     
+def receber_cep():
+    pass
+
+def receber_nome_rua():
+    pass
+
+def receber_numero_local():
+    pass
+
+def receber_complemento():
+    pass
+
+def receber_descricao():
+    pass
 def receber_cep():
     pass
 
@@ -118,4 +172,3 @@ def receber_descricao():
 
 while True:
     tela_inicial()
-
