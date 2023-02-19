@@ -64,13 +64,7 @@ def trocar_tela(opcao):
             
 def tela_login():
     print("\n Login")
-    print("\n\t CPF:")
-    in_cpf = input()
-    print("\n Login")
-    print("\n\t CPF:")
-    in_cpf = input()
-    #checar nome no banco de dados
-    in_senha = input()
+    checar_login()
     #checar senha no banco de dados
     
 def tela_cadastro():
@@ -122,8 +116,6 @@ def cadastro_endereco():
         """
         cursor.execute(query2)
         ultimo_cliente_id = cursor.fetchall()
-        print("Ultimo cliente")
-        print(ultimo_cliente_id[0][0])
 
         query3 = """
         SELECT * FROM endereco
@@ -131,8 +123,6 @@ def cadastro_endereco():
         """
         cursor.execute(query3)
         ultimo_endereco_id = cursor.fetchall()
-        print("Ultimo endereco")
-        print(ultimo_endereco_id[0][0])
 
         query4 = """
         UPDATE cliente SET id_endereco = ? WHERE id = ?;
@@ -140,35 +130,38 @@ def cadastro_endereco():
         data = (ultimo_endereco_id[0][0], ultimo_cliente_id[0][0])
         cursor.execute(query4, data)
         conexao.commit()
-    
-def receber_cep():
-    pass
 
-def receber_nome_rua():
-    pass
+def checar_login():
+    print("\n\t CPF:")
+    in_cpf = input()
+    print("\n\t Senha:")
+    in_senha = input()
+    if len(in_cpf)==0 or len(in_senha)==0:
+        print("Todos os dados devem ser informados!")
+    else:
+        query = """
+        SELECT senha FROM cliente
+        WHERE cpf = ?;
+        """
+        cursor.execute(query, (in_cpf,))
+        senha = cursor.fetchall()
 
-def receber_numero_local():
-    pass
+        if(senha[0][0] == in_senha):
+            print("\n\t Qual será o seu pedido?")
+            tamanho()
+        else:
+            print("Senha inválida!")
 
-def receber_complemento():
-    pass
-
-def receber_descricao():
-    pass
-def receber_cep():
-    pass
-
-def receber_nome_rua():
-    pass
-
-def receber_numero_local():
-    pass
-
-def receber_complemento():
-    pass
-
-def receber_descricao():
-    pass
+def tamanho():
+    print("\n\t Tamanhos disponíveis:")
+    query = """
+    SELECT * FROM tamanho
+    """
+    cursor.execute(query)
+    tamanhos = cursor.fetchall()
+    for tamanho in tamanhos:
+        print(f"\t - {tamanho[1]:4}")
+    in_tamanho = input()
 
 while True:
     tela_inicial()
