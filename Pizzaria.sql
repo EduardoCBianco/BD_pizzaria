@@ -28,7 +28,6 @@ CREATE TABLE borda (
 CREATE TABLE pizza (
   id INTEGER PRIMARY KEY,
   id_tamanho INTEGER REFERENCES tamanho (id),
-  id_sabor INTEGER REFERENCES sabor (id),
   id_borda INTEGER REFERENCES borda (id),
   preco INTEGER NOT NULL
 );
@@ -48,18 +47,18 @@ CREATE TABLE tipo_acompanhamentos (
 
 CREATE TABLE cliente (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  cpf INTEGER NOT NULL,
+  cpf INTEGER NOT NULL UNIQUE,
   nome STRING  NOT NULL,
   email STRING  NOT NULL,
   senha INTEGER NOT NULL,
-  id_endereco INTEGER REFERENCES endereco (id),
-  id_pedido INTEGER REFERENCES pedido (id)
+  id_endereco INTEGER REFERENCES endereco (id)
 );
 
 CREATE TABLE pedido (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  preco INTEGER NOT NULL,
-  data DATETIME NOT NULL
+  preco INTEGER,
+  data DATETIME NOT NULL,
+  id_cliente INTEGER REFERENCES cliente (id)
 );
 
 CREATE TABLE entregador (
@@ -83,6 +82,12 @@ CREATE TABLE pedido_pizza (
   id_pizza INTEGER REFERENCES pizza (id),
   id_pedido INTEGER REFERENCES pedido (id),
   valor INTEGER NOT NULL
+);
+
+CREATE TABLE pedido_sabor (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id_pizza INTEGER REFERENCES pizza (id),
+  id_sabor INTEGER REFERENCES sabor (id)
 );
 
 CREATE TABLE pedido_acompanhamentos (

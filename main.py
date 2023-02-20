@@ -1,39 +1,10 @@
 import time
 import sqlite3
 import math
+from datetime import date
 conexao = sqlite3.connect('pizzaria.db')
 
 cursor = conexao.cursor()
-
-class Cliente:
-    def __init__(self):
-        pass
-    
-    @property
-    def cpf(self):
-        return self.cpf
-    
-    @cpf.setter
-    def set_cpf(self, in_cpf):
-        self.cpf = in_cpf
-
-    @property
-    def nome(self):
-        return self.nome
-    
-    @nome.setter
-    def set_nome(self, in_nome):
-        self.nome = in_nome
-
-    @property
-    def email(self):
-        return self.email
-    
-    @email.setter
-    def set_email(self, in_email):
-        self.email = in_email
-
-
 
 def tela_inicial():
     print("\n E.M. Pizzaria")
@@ -140,17 +111,29 @@ def checar_login():
         print("Todos os dados devem ser informados!")
     else:
         query = """
-        SELECT senha FROM cliente
+        SELECT id, senha FROM cliente
         WHERE cpf = ?;
         """
         cursor.execute(query, (in_cpf,))
-        senha = cursor.fetchall()
+        cliente_id, senha = (cursor.fetchall())[0]
 
-        if(senha[0][0] == in_senha):
+        if(senha == in_senha):
             print("\n\t Qual será o seu pedido?")
-            tamanho()
+            criar_pedido(cliente_id)
+            qtde_sabores, pizza_id = tamanho()
+            sabor(qtde_sabores, pizza_id)
         else:
             print("Senha inválida!")
+
+def criar_pedido(id_cliente):
+    query = """
+    INSERT INTO pedido (data, id_cliente)
+    VALUES (?, ?);
+    """
+    print(date.today())
+    print(type(date))
+    cursor.execute(query, (date.today(), id_cliente))
+    conexao.commit()
 
 def tamanho():
     print("\n\t Tamanhos disponíveis:")
@@ -162,6 +145,65 @@ def tamanho():
     for tamanho in tamanhos:
         print(f"\t - {tamanho[1]:4}")
     in_tamanho = input()
+
+    query2 = """
+    SELECT id, preco, qtde_sabores FROM tamanho
+    WHERE nome = ?;
+    """
+    cursor.execute(query2, (in_tamanho,))
+    tamanho_id, preco, qtde_sabores = (cursor.fetchall())[0]
+
+    print(tamanho_id)
+    print(preco)
+
+    query3 = """
+    INSERT INTO pizza (id_tamanho, preco)
+    VALUES (?, ?);
+    """
+    cursor.execute(query3, (tamanho_id, preco))
+    conexao.commit()
+
+    query4 = """
+    SELECT id FROM pizza
+    WHERE ID = (SELECT MAX(id) FROM pizza);
+    """
+    cursor.execute(query4)
+    pizza_id = cursor.fetchall()
+
+    return qtde_sabores, pizza_id[0][0]
+
+def sabor(qtde_sabores, pizza_id):
+    print(f"\t Escolha até {qtde_sabores} sabor(es)")
+
+    print("\n\t Sabores disponíveis:")
+    query = """
+    SELECT * FROM sabor
+    """
+    cursor.execute(query)
+    sabores = cursor.fetchall()
+    for sabor in sabores:
+        print(f"\t - {sabor[1]:4}: {sabor[2]}")
+    print(type(qtde_sabores))
+    for opcao in range(qtde_sabores):
+        in_sabor = input("\t Sabor:")
+        query2 = """
+        SELECT id, preco FROM sabor
+        WHERE nome = ?;
+        """
+        cursor.execute(query2, (in_sabor,))
+        sabor_id, preco = (cursor.fetchall())[0]
+
+        print(pizza_id)
+        print(type(pizza_id))
+        print(sabor_id)
+        print(type(sabor_id))
+
+        query3 = """
+        INSERT INTO pedido_sabor (id_pizza, id_sabor)
+        VALUES (?, ?);
+        """
+        cursor.execute(query3, (pizza_id, sabor_id))
+        conexao.commit()
 
 while True:
     tela_inicial()
