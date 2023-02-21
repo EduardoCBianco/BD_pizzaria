@@ -188,9 +188,13 @@ def checar_login():
 
         if(senha == in_senha):
             print("\n\t Qual será o seu pedido?")
-            criar_pedido(cliente_id)
-            qtde_sabores, pizza_id = tamanho()
-            sabor(qtde_sabores, pizza_id)
+            pedido_id = criar_pedido(cliente_id)
+            numero_pizzas = input("\n\t Quantidades de pizza: ")
+            for pizza in range(numero_pizzas):
+                qtde_sabores, pizza_id, preco_tamanho = tamanho()
+                preco_sabor = sabor(qtde_sabores, pizza_id)
+                preco_borda = borda(pizza_id)
+                total_pizza(pedido_id, pizza_id, preco_tamanho, preco_sabor, preco_borda)
         else:
             print("Senha inválida!")
 
@@ -203,6 +207,14 @@ def criar_pedido(id_cliente):
     print(type(date))
     cursor.execute(query, (date.today(), id_cliente))
     conexao.commit()
+
+    query2 = """
+    SELECT id FROM pedido
+    WHERE ID = (SELECT MAX(id) FROM pedido);
+    """
+    cursor.execute(query2)
+    pedido_id = cursor.fetchall()
+    return pedido_id
 
 def tamanho():
     print("\n\t Tamanhos disponíveis:")
@@ -220,16 +232,13 @@ def tamanho():
     WHERE nome = ?;
     """
     cursor.execute(query2, (in_tamanho,))
-    tamanho_id, preco, qtde_sabores = (cursor.fetchall())[0]
-
-    print(tamanho_id)
-    print(preco)
+    tamanho_id, preco_tamanho, qtde_sabores = (cursor.fetchall())[0]
 
     query3 = """
-    INSERT INTO pizza (id_tamanho, preco)
-    VALUES (?, ?);
+    INSERT INTO pizza (id_tamanho)
+    VALUES (?);
     """
-    cursor.execute(query3, (tamanho_id, preco))
+    cursor.execute(query3, (tamanho_id,))
     conexao.commit()
 
     query4 = """
@@ -239,7 +248,7 @@ def tamanho():
     cursor.execute(query4)
     pizza_id = cursor.fetchall()
 
-    return qtde_sabores, pizza_id[0][0]
+    return qtde_sabores, pizza_id[0][0], preco_tamanho
 
 def sabor(qtde_sabores, pizza_id):
     print(f"\t Escolha até {qtde_sabores} sabor(es)")
@@ -262,17 +271,50 @@ def sabor(qtde_sabores, pizza_id):
         cursor.execute(query2, (in_sabor,))
         sabor_id, preco = (cursor.fetchall())[0]
 
-        print(pizza_id)
-        print(type(pizza_id))
-        print(sabor_id)
-        print(type(sabor_id))
-
+        if preco == 10:
+            preco = 10
+        else:
+            preco = preco
         query3 = """
         INSERT INTO pedido_sabor (id_pizza, id_sabor)
         VALUES (?, ?);
         """
         cursor.execute(query3, (pizza_id, sabor_id))
         conexao.commit()
+    preco_sabor = preco
+    return preco_sabor
+
+def borda(pizza_id):
+    print(f"\t Escolha a borda: ")
+
+    print("\n\t Sabores disponíveis:")
+    query = """
+    SELECT * FROM borda
+    """
+    cursor.execute(query)
+    bordas = cursor.fetchall()
+    for borda in bordas:
+        print(f"\t - {borda[1]:4}")
+
+    in_borda = input("\t Borda:")
+    query2 = """
+    SELECT id, preco FROM borda
+    WHERE nome = ?;
+    """
+    cursor.execute(query2, (in_borda,))
+    borda_id, preco_borda = (cursor.fetchall())[0]
+
+    query4 = """
+    UPDATE pizza SET id_borda = ? WHERE id = ?;
+    """
+    data = (borda_id, pizza_id)
+    cursor.execute(query4, data)
+    conexao.commit()
+
+    return preco_borda
+
+def total_pizza(pedido_id, pizza_id, preco_tamanho, preco_sabor, preco_borda):
+    print(pedido_id)
 
 while True:
     tela_inicial()

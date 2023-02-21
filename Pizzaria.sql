@@ -29,7 +29,7 @@ CREATE TABLE pizza (
   id INTEGER PRIMARY KEY,
   id_tamanho INTEGER REFERENCES tamanho (id),
   id_borda INTEGER REFERENCES borda (id),
-  preco INTEGER NOT NULL
+  preco INTEGER
 );
 
 CREATE TABLE acompanhamentos (
@@ -315,6 +315,17 @@ INSERT INTO borda (
                           3,
                           'Catupiry',
                           5
+                      );
+
+INSERT INTO borda (
+                          id,
+                          nome,
+                          preco
+                      )
+                      VALUES (
+                          4,
+                          'Sem borda',
+                          0
                       );
 
 INSERT INTO tipo_acompanhamentos (
