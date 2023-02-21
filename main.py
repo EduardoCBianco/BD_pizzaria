@@ -56,17 +56,14 @@ def tela_cadastro():
 def cadastro_cliente():
     in_nome = registrar_nome()
     in_cpf = registrar_cpf()
-    in_email = input("   Email: ")
-    in_senha = input("   Senha: ")
-    if len(in_nome)==0 or len(in_cpf)==0 or len(in_email)==0 or len(in_senha)==0:
-        print("Todos os dados devem ser informados!")
-    else:
-        query = """
-        INSERT INTO cliente (nome, cpf, email, senha)
-        VALUES (?, ?, ?, ?);
-        """
-        cursor.execute(query, (in_nome, in_cpf, in_email, in_senha))
-        conexao.commit()
+    in_email = registrar_email()
+    in_senha = registrar_senha()
+    query = """
+    INSERT INTO cliente (nome, cpf, email, senha)
+    VALUES (?, ?, ?, ?);
+    """
+    cursor.execute(query, (in_nome, in_cpf, in_email, in_senha))
+    conexao.commit()
 
 def registrar_nome():
     in_nome = None
@@ -89,11 +86,8 @@ def registrar_cpf():
         if in_cpf == "-1":
             print("\nCadastro Cancelado!")
             time.sleep(0.6)
-        elif len(in_cpf) == 0:
+        elif len(in_cpf) != 11 or contem_nao_numericos(in_cpf):
             print("\nCPF Inválido!")
-            time.sleep(0.6)
-        elif contem_nao_numericos(in_cpf):
-            print("\CPF Inválido!")
             time.sleep(0.6)
         else:
             return in_cpf
@@ -105,6 +99,39 @@ def contem_nao_numericos(input_string):
             return True
     return False
 
+def registrar_email():
+    in_email = None
+    while in_email != "-1":
+        in_email = input("\tEmail: ")
+        if in_email == "-1":
+            print("\nCadastro Cancelado!")
+            time.sleep(0.6)
+        elif len(in_email) == 0 or nao_contem_arroba(in_email):
+            print("\nEmail Inválido!")
+            time.sleep(0.6)
+        else:
+            return in_email
+    tela_inicial()
+
+def nao_contem_arroba(input_string):
+    for char in input_string:
+        if char == '@':
+            return False
+    return True
+
+def registrar_senha():
+    in_senha = None
+    while in_senha != "-1":
+        in_senha = input("\tSenha: ")
+        if in_senha == "-1":
+            print("\nCadastro Cancelado!")
+            time.sleep(0.6)
+        elif len(in_senha) == 0:
+            print("\nSenha Inválida!")
+            time.sleep(0.6)
+        else:
+            return in_senha
+    tela_inicial()
 
 def cadastro_endereco():
     in_cep = input("   CEP: ")
