@@ -1,7 +1,12 @@
 import time
 import sqlite3
 import math
+import string
 from datetime import date
+
+SAIR = "-1"
+SUCESSO = 1
+
 conexao = sqlite3.connect('pizzaria.db')
 
 cursor = conexao.cursor()
@@ -29,7 +34,7 @@ def trocar_tela(opcao):
 
         case _:
             print("\n Opção Inválida!")
-            time.sleep(0.8)
+            time.sleep(0.6)
             return 1
             
             
@@ -49,8 +54,8 @@ def tela_cadastro():
 
 
 def cadastro_cliente():
-    in_nome = input("   Nome completo: ")
-    in_cpf = input("   CPF: ")
+    in_nome = registrar_nome()
+    in_cpf = registrar_cpf()
     in_email = input("   Email: ")
     in_senha = input("   Senha: ")
     if len(in_nome)==0 or len(in_cpf)==0 or len(in_email)==0 or len(in_senha)==0:
@@ -62,6 +67,43 @@ def cadastro_cliente():
         """
         cursor.execute(query, (in_nome, in_cpf, in_email, in_senha))
         conexao.commit()
+
+def registrar_nome():
+    in_nome = None
+    while in_nome != "-1":
+        in_nome = input("\tNome completo: ")
+        if in_nome == "-1":
+            print("\nCadastro Cancelado!")
+            time.sleep(0.6)
+        elif len(in_nome) == 0:
+            print("\nNome Inválido!")
+            time.sleep(0.6)
+        else:
+            return in_nome
+    tela_inicial()
+
+def registrar_cpf():
+    in_cpf = None
+    while in_cpf != "-1":
+        in_cpf = input("\tCPF: ")
+        if in_cpf == "-1":
+            print("\nCadastro Cancelado!")
+            time.sleep(0.6)
+        elif len(in_cpf) == 0:
+            print("\nCPF Inválido!")
+            time.sleep(0.6)
+        elif contem_nao_numericos(in_cpf):
+            print("\CPF Inválido!")
+            time.sleep(0.6)
+        else:
+            return in_cpf
+    tela_inicial()
+
+def contem_nao_numericos(input_string):
+    for char in input_string:
+        if not char.isdigit():
+            return True
+    return False
 
 
 def cadastro_endereco():
