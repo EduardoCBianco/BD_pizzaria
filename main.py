@@ -3,6 +3,7 @@ import sqlite3
 import math
 import string
 from datetime import date
+import random
 
 SAIR = "-1"
 SUCESSO = 1
@@ -189,12 +190,32 @@ def checar_login():
         if(senha == in_senha):
             print("\n\t Qual será o seu pedido?")
             pedido_id = criar_pedido(cliente_id)
-            numero_pizzas = input("\n\t Quantidades de pizza: ")
-            for pizza in range(numero_pizzas):
+            numero_pizzas = input("\n\t Quantidade de pizzas: ")
+            total_pizzas = []
+            for pizza in range(int(numero_pizzas)):
                 qtde_sabores, pizza_id, preco_tamanho = tamanho()
                 preco_sabor = sabor(qtde_sabores, pizza_id)
                 preco_borda = borda(pizza_id)
-                total_pizza(pedido_id, pizza_id, preco_tamanho, preco_sabor, preco_borda)
+                preco_pizza = total_pizza(pedido_id, pizza_id, preco_tamanho,\
+                                preco_sabor, preco_borda)
+                total_pizzas.append(preco_pizza)
+            print("\n\t Deseja acompanhamentos? ('1' para sim, '0' para não)")
+            acomp = int(input())
+            if acomp == 1:
+                preco_bebida = acompanhamentos(pedido_id)
+            else:
+                preco_bebida = 0
+            total = sum(total_pizzas) + preco_bebida
+            print(f"\t O total do seu pedido é de {total}")
+            print("\n\t Prosseguir? ('1' para seguir, '0' para cancelar)")
+            fim = int(input())
+            if fim == 0:
+                tela_inicial()
+            else:
+                preco_entrega = entrega(pedido_id)
+                print(f"\t O total da entrega é de {preco_entrega}")
+                print(f"\t O total com entrega é de {total + preco_entrega}")
+                print(f"\t Pedido realizado com sucesso!")
         else:
             print("Senha inválida!")
 
@@ -203,8 +224,6 @@ def criar_pedido(id_cliente):
     INSERT INTO pedido (data, id_cliente)
     VALUES (?, ?);
     """
-    print(date.today())
-    print(type(date))
     cursor.execute(query, (date.today(), id_cliente))
     conexao.commit()
 
@@ -214,7 +233,7 @@ def criar_pedido(id_cliente):
     """
     cursor.execute(query2)
     pedido_id = cursor.fetchall()
-    return pedido_id
+    return pedido_id[0][0]
 
 def tamanho():
     print("\n\t Tamanhos disponíveis:")
@@ -261,9 +280,11 @@ def sabor(qtde_sabores, pizza_id):
     sabores = cursor.fetchall()
     for sabor in sabores:
         print(f"\t - {sabor[1]:4}: {sabor[2]}")
-    print(type(qtde_sabores))
+
     for opcao in range(qtde_sabores):
         in_sabor = input("\t Sabor:")
+        if len(in_sabor) == 0:
+            break
         query2 = """
         SELECT id, preco FROM sabor
         WHERE nome = ?;
@@ -314,7 +335,67 @@ def borda(pizza_id):
     return preco_borda
 
 def total_pizza(pedido_id, pizza_id, preco_tamanho, preco_sabor, preco_borda):
-    print(pedido_id)
+    total_pizza = preco_tamanho + preco_sabor + preco_borda
+    query = """
+    INSERT INTO pedido_pizza (id_pizza, id_pedido, valor)
+    VALUES (?, ?, ?);
+    """
+    cursor.execute(query, (pizza_id, pedido_id, total_pizza))
+    conexao.commit()
+    return total_pizza
+
+def acompanhamentos(pedido_id):
+    numero_acomp = input("\n\t Quantidade de acompanhamentos: ")
+    total_acomp = []
+    for acomp in range(int(numero_acomp)):
+        preco_bebida = bebida(pedido_id)
+        total_acomp.append(preco_bebida)
+    return sum(total_acomp)
+
+def bebida(pedido_id):
+    print("\n\t Bebidas disponíveis:")
+    query = """
+    SELECT * FROM acompanhamentos
+    """
+    cursor.execute(query)
+    bebidas = cursor.fetchall()
+    for bebida in bebidas:
+        print(f"\t - {bebida[2]:4}")
+    in_bebida = input()
+
+    query2 = """
+    SELECT id, preco FROM acompanhamentos
+    WHERE nome = ?;
+    """
+    cursor.execute(query2, (in_bebida,))
+    bebida_id, preco_bebida = (cursor.fetchall())[0]
+
+    query3 = """
+    INSERT INTO pedido_acompanhamentos (id_acompanhamento, id_pedido, valor)
+    VALUES (?, ?, ?);
+    """
+    cursor.execute(query3, (bebida_id, pedido_id, preco_bebida))
+    conexao.commit()
+    return preco_bebida
+
+def entrega(pedido_id):
+    query = """
+    SELECT nome FROM entregador
+    WHERE id = ?;
+    """
+    id_entregador = random.randint(1, 2)
+    cursor.execute(query, (id_entregador,))
+    nome_entragdor = (cursor.fetchall())[0]
+    print(f"\t A entrega será feita por: {nome_entragdor[0]}")
+
+    valor_entrega = random.randrange(4, 10)
+    query2 = """
+    INSERT INTO pedido_entrega (id_pedido, id_entregador, preco)
+    VALUES (?, ?, ?);
+    """
+    cursor.execute(query2, (pedido_id, id_entregador, valor_entrega))
+    conexao.commit()
+    return valor_entrega
 
 while True:
     tela_inicial()

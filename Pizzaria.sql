@@ -98,7 +98,7 @@ CREATE TABLE pedido_acompanhamentos (
 );
 
 CREATE TABLE pedido_entrega (
-  id_entrega INTEGER REFERENCES entrega (id),
+  id_pedido INTEGER REFERENCES pedido (id),
   id_entregador INTEGER REFERENCES entregador (id),
   preco INTEGER NOT NULL
 );
