@@ -65,7 +65,7 @@ def cadastro_cliente():
     in_senha = registrar_senha()
     query = """
     INSERT INTO cliente (nome, cpf, email, senha)
-    VALUES (?, ?, ?, CAST(? AS STRING));
+    VALUES (?, ?, ?, ?);
     """
     cursor.execute(query, (in_nome, in_cpf, in_email, in_senha))
     conexao.commit()
@@ -144,8 +144,7 @@ def cadastro_endereco():
     in_numero = input("   Número: ")
     in_complemento = input("   Complemento: ")
     in_descricao = input("   Descrição: ")
-    if len(in_cep)==0 or len(in_nome_rua)==0 or len(in_numero)==0 or \
-        len(in_descricao)==0:
+    if len(in_cep)==0 or len(in_nome_rua)==0 or len(in_numero)==0:
         print("Todos os dados devem ser informados!")
     else:
         query = """
@@ -178,39 +177,37 @@ def cadastro_endereco():
 
 def checar_login():
     cliente_id = checar_cpf()
-    senha_esta_correta = checar_senha(cliente_id)
+    checar_senha(cliente_id)
 
-    if(senha_esta_correta):
-        print("\n\t Qual será o seu pedido?")
-        pedido_id = criar_pedido(cliente_id)
-        numero_pizzas = input("\n\t Quantidade de pizzas: ")
-        total_pizzas = []
-        for pizza in range(int(numero_pizzas)):
-            qtde_sabores, pizza_id, preco_tamanho = tamanho()
-            preco_sabor = sabor(qtde_sabores, pizza_id)
-            preco_borda = borda(pizza_id)
-            preco_pizza = total_pizza(pedido_id, pizza_id, preco_tamanho,\
-                            preco_sabor, preco_borda)
-            total_pizzas.append(preco_pizza)
-        print("\n\t Deseja acompanhamentos? ('1' para sim, '0' para não)")
-        acomp = int(input())
-        if acomp == 1:
-            preco_bebida = acompanhamentos(pedido_id)
-        else:
-            preco_bebida = 0
-        total = sum(total_pizzas) + preco_bebida
-        print(f"\t O total do seu pedido é de {total}")
-        print("\n\t Prosseguir? ('1' para seguir, '0' para cancelar)")
-        fim = int(input())
-        if fim == 0:
-            tela_inicial()
-        else:
-            preco_entrega = entrega(pedido_id)
-            print(f"\t O total da entrega é de {preco_entrega}")
-            print(f"\t O total com entrega é de {total + preco_entrega}")
-            print(f"\t Pedido realizado com sucesso!")
+    print("\n\t Qual será o seu pedido?")
+    pedido_id = criar_pedido(cliente_id)
+    numero_pizzas = input("\n\t Quantidade de pizzas: ")
+    total_pizzas = []
+    for pizza in range(int(numero_pizzas)):
+        qtde_sabores, pizza_id, preco_tamanho = tamanho()
+        preco_sabor = sabor(qtde_sabores, pizza_id)
+        preco_borda = borda(pizza_id)
+        preco_pizza = total_pizza(pedido_id, pizza_id, preco_tamanho,\
+                        preco_sabor, preco_borda)
+        total_pizzas.append(preco_pizza)
+    print("\n\t Deseja acompanhamentos? ('1' para sim, '0' para não)")
+    acomp = int(input())
+    if acomp == 1:
+        preco_bebida = acompanhamentos(pedido_id)
     else:
-        print("Senha inválida!")
+        preco_bebida = 0
+    total = sum(total_pizzas) + preco_bebida
+    print(f"\t O total do seu pedido é de {total}")
+    print("\n\t Prosseguir? ('1' para seguir, '0' para cancelar)")
+    fim = int(input())
+    if fim == 0:
+        tela_inicial()
+    else:
+        preco_entrega = entrega(pedido_id)
+        print(f"\t O total da entrega é de {preco_entrega}")
+        print(f"\t O total com entrega é de {total + preco_entrega}")
+        print(f"\t Pedido realizado com sucesso!")
+        finalizar_pedido(pedido_id, total + preco_entrega)
 
 def checar_cpf():
     in_cpf = None
@@ -322,6 +319,7 @@ def sabor(qtde_sabores, pizza_id):
     for sabor in sabores:
         print(f"\t - {sabor[1]:4}: {sabor[2]}")
 
+    preco_max = 0
     for opcao in range(qtde_sabores):
         in_sabor = input("\t Sabor:")
         if len(in_sabor) == 0:
@@ -333,17 +331,15 @@ def sabor(qtde_sabores, pizza_id):
         cursor.execute(query2, (in_sabor,))
         sabor_id, preco = (cursor.fetchall())[0]
 
-        if preco == 10:
-            preco = 10
-        else:
-            preco = preco
+        if preco > preco_max:
+            preco_max = preco
         query3 = """
         INSERT INTO pedido_sabor (id_pizza, id_sabor)
         VALUES (?, ?);
         """
         cursor.execute(query3, (pizza_id, sabor_id))
         conexao.commit()
-    preco_sabor = preco
+    preco_sabor = preco_max
     return preco_sabor
 
 def borda(pizza_id):
@@ -437,6 +433,14 @@ def entrega(pedido_id):
     cursor.execute(query2, (pedido_id, id_entregador, valor_entrega))
     conexao.commit()
     return valor_entrega
+
+def finalizar_pedido(pedido_id, valor_total):
+    query = """
+    UPDATE pedido SET preco = ? WHERE id = ?;
+    """
+    data = (valor_total, pedido_id)
+    cursor.execute(query, data)
+    conexao.commit()
 
 while True:
     tela_inicial()
