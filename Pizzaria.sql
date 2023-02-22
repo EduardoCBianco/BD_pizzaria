@@ -50,7 +50,7 @@ CREATE TABLE cliente (
   cpf INTEGER NOT NULL UNIQUE,
   nome STRING  NOT NULL,
   email STRING  NOT NULL,
-  senha INTEGER NOT NULL,
+  senha STRING NOT NULL,
   id_endereco INTEGER REFERENCES endereco (id)
 );
 

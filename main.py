@@ -29,9 +29,11 @@ def trocar_tela(opcao):
     match opcao:
         case '1':
             tela_cadastro()
-
+            return 1
+        
         case '2':
             tela_login()
+            return 1
 
         case _:
             print("\n Opção Inválida!")
@@ -52,6 +54,8 @@ def tela_cadastro():
     print("\n Cadastro de Endereço")
     cadastro_endereco()
     #checar endereco como não null
+    
+    tela_inicial()
 
 
 def cadastro_cliente():
@@ -61,7 +65,7 @@ def cadastro_cliente():
     in_senha = registrar_senha()
     query = """
     INSERT INTO cliente (nome, cpf, email, senha)
-    VALUES (?, ?, ?, ?);
+    VALUES (?, ?, ?, CAST(? AS STRING));
     """
     cursor.execute(query, (in_nome, in_cpf, in_email, in_senha))
     conexao.commit()
@@ -173,51 +177,88 @@ def cadastro_endereco():
         conexao.commit()
 
 def checar_login():
-    print("\n\t CPF:")
-    in_cpf = input()
-    print("\n\t Senha:")
-    in_senha = input()
-    if len(in_cpf)==0 or len(in_senha)==0:
-        print("Todos os dados devem ser informados!")
-    else:
-        query = """
-        SELECT id, senha FROM cliente
-        WHERE cpf = ?;
-        """
-        cursor.execute(query, (in_cpf,))
-        cliente_id, senha = (cursor.fetchall())[0]
+    cliente_id = checar_cpf()
+    senha_esta_correta = checar_senha(cliente_id)
 
-        if(senha == in_senha):
-            print("\n\t Qual será o seu pedido?")
-            pedido_id = criar_pedido(cliente_id)
-            numero_pizzas = input("\n\t Quantidade de pizzas: ")
-            total_pizzas = []
-            for pizza in range(int(numero_pizzas)):
-                qtde_sabores, pizza_id, preco_tamanho = tamanho()
-                preco_sabor = sabor(qtde_sabores, pizza_id)
-                preco_borda = borda(pizza_id)
-                preco_pizza = total_pizza(pedido_id, pizza_id, preco_tamanho,\
-                                preco_sabor, preco_borda)
-                total_pizzas.append(preco_pizza)
-            print("\n\t Deseja acompanhamentos? ('1' para sim, '0' para não)")
-            acomp = int(input())
-            if acomp == 1:
-                preco_bebida = acompanhamentos(pedido_id)
-            else:
-                preco_bebida = 0
-            total = sum(total_pizzas) + preco_bebida
-            print(f"\t O total do seu pedido é de {total}")
-            print("\n\t Prosseguir? ('1' para seguir, '0' para cancelar)")
-            fim = int(input())
-            if fim == 0:
-                tela_inicial()
-            else:
-                preco_entrega = entrega(pedido_id)
-                print(f"\t O total da entrega é de {preco_entrega}")
-                print(f"\t O total com entrega é de {total + preco_entrega}")
-                print(f"\t Pedido realizado com sucesso!")
+    if(senha_esta_correta):
+        print("\n\t Qual será o seu pedido?")
+        pedido_id = criar_pedido(cliente_id)
+        numero_pizzas = input("\n\t Quantidade de pizzas: ")
+        total_pizzas = []
+        for pizza in range(int(numero_pizzas)):
+            qtde_sabores, pizza_id, preco_tamanho = tamanho()
+            preco_sabor = sabor(qtde_sabores, pizza_id)
+            preco_borda = borda(pizza_id)
+            preco_pizza = total_pizza(pedido_id, pizza_id, preco_tamanho,\
+                            preco_sabor, preco_borda)
+            total_pizzas.append(preco_pizza)
+        print("\n\t Deseja acompanhamentos? ('1' para sim, '0' para não)")
+        acomp = int(input())
+        if acomp == 1:
+            preco_bebida = acompanhamentos(pedido_id)
         else:
-            print("Senha inválida!")
+            preco_bebida = 0
+        total = sum(total_pizzas) + preco_bebida
+        print(f"\t O total do seu pedido é de {total}")
+        print("\n\t Prosseguir? ('1' para seguir, '0' para cancelar)")
+        fim = int(input())
+        if fim == 0:
+            tela_inicial()
+        else:
+            preco_entrega = entrega(pedido_id)
+            print(f"\t O total da entrega é de {preco_entrega}")
+            print(f"\t O total com entrega é de {total + preco_entrega}")
+            print(f"\t Pedido realizado com sucesso!")
+    else:
+        print("Senha inválida!")
+
+def checar_cpf():
+    in_cpf = None
+    while in_cpf != "-1":
+        in_cpf = input("\n\t CPF:")
+        if in_cpf == "-1":
+            print("\nLogin Cancelado!")
+            time.sleep(0.6)
+        elif len(in_cpf) == 0:
+            print("\nCampo Vazio!")
+            time.sleep(0.6)
+        else:
+            query = """
+            SELECT id FROM cliente
+            WHERE cpf = ?;
+            """
+            cursor.execute(query, (in_cpf,))
+            cliente_id = cursor.fetchall()
+            if len(cliente_id) == 0:
+                print("\nCliente não cadastrado!")
+                time.sleep(0.6)
+            else:
+                return cliente_id[0][0]
+    tela_inicial()
+
+def checar_senha(id_cliente):
+    in_senha = None
+    while in_senha != "-1":
+        in_senha = input("\n\t Senha:")
+        if in_senha == "-1":
+            print("\nLogin Cancelado!")
+            time.sleep(0.6)
+        elif len(in_senha) == 0:
+            print("\nCampo Vazio!")
+            time.sleep(0.6)
+        else:
+            query = """
+            SELECT senha FROM cliente
+            WHERE id = ?;
+            """
+            cursor.execute(query, (id_cliente,))
+            senha_cadastrada = cursor.fetchall()[0][0]
+            if in_senha != senha_cadastrada:
+                print("\nSenha Incorreta!")
+                time.sleep(0.6)
+            else:
+                return True
+    tela_inicial()
 
 def criar_pedido(id_cliente):
     query = """
